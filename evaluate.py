@@ -24,6 +24,9 @@ from src.augmentation.pda import PDABatchTransform
 def evaluate_model(args):
     """Run comprehensive evaluation on a trained model."""
     
+    # Create output directory
+    os.makedirs(args.output_dir, exist_ok=True)
+    
     checkpoint = torch.load(args.checkpoint, map_location='cpu')
     config = checkpoint['config']
     
@@ -152,8 +155,6 @@ def evaluate_model(args):
             efficiency_results,
             save_path=os.path.join(args.output_dir, 'efficiency_comparison.png')
         )
-    
-    os.makedirs(args.output_dir, exist_ok=True)
     
     with open(os.path.join(args.output_dir, 'evaluation_results.json'), 'w') as f:
         json.dump(results, f, indent=2, default=str)
