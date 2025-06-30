@@ -73,7 +73,8 @@ def evaluate_model(args):
         ])
         
         corruption_results = corruption_benchmark.evaluate(
-            model, test_loader, corruption_types, device
+            model, test_loader, corruption_types, device,
+            dataset_name=config['data'].get('dataset', 'cifar10')
         )
         
         mce = corruption_benchmark.calculate_mce(corruption_results, clean_accuracy)

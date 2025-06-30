@@ -39,7 +39,8 @@ class CorruptionBenchmark:
         model: nn.Module,
         dataloader: torch.utils.data.DataLoader,
         corruption_types: Optional[List[str]] = None,
-        device: str = 'cuda'
+        device: str = 'cuda',
+        dataset_name: str = 'cifar10'
     ) -> Dict[str, Dict[int, float]]:
         """Evaluate model on corrupted images.
         
@@ -67,8 +68,38 @@ class CorruptionBenchmark:
                     for images, labels in tqdm(dataloader, desc=f'{corruption} (severity {severity})'):
                         corrupted_images = []
                         for img in images:
+                            # Ensure input is in [0, 255] range and float32
                             img_np = img.permute(1, 2, 0).cpu().numpy()
-                            corrupted = self.corruption_functions[corruption](img_np, severity)
+                            # Denormalize if necessary
+                            if img_np.min() < 0 or img_np.max() <= 1:
+                                # Image is normalized, denormalize it
+                                if dataset_name in ['cifar10', 'cifar100']:
+                                    if dataset_name == 'cifar10':
+                                        mean = np.array([0.4914, 0.4822, 0.4465], dtype=np.float32)
+                                        std = np.array([0.2023, 0.1994, 0.2010], dtype=np.float32)
+                                    else:  # cifar100
+                                        mean = np.array([0.5071, 0.4867, 0.4408], dtype=np.float32)
+                                        std = np.array([0.2675, 0.2565, 0.2761], dtype=np.float32)
+                                else:  # ImageNet normalization
+                                    mean = np.array([0.485, 0.456, 0.406], dtype=np.float32)
+                                    std = np.array([0.229, 0.224, 0.225], dtype=np.float32)
+                                img_np = (img_np * std + mean)
+                                img_np = np.clip(img_np, 0, 1) * 255.0
+                            img_np = np.clip(img_np, 0, 255).astype(np.float32)
+                            
+                            # Apply corruption
+                            try:
+                                corrupted = self.corruption_functions[corruption](img_np, severity)
+                                corrupted = np.clip(corrupted, 0, 255).astype(np.float32)
+                            except ValueError as e:
+                                print(f"Error in {corruption}: {e}")
+                                print(f"img_np stats: min={img_np.min()}, max={img_np.max()}, shape={img_np.shape}")
+                                raise
+                            
+                            # Normalize back
+                            corrupted = corrupted / 255.0
+                            corrupted = (corrupted - mean) / std
+                            
                             corrupted_tensor = torch.from_numpy(corrupted).permute(2, 0, 1).float()
                             corrupted_images.append(corrupted_tensor)
                         
@@ -98,17 +129,19 @@ class CorruptionBenchmark:
     
     def gaussian_noise(self, x: np.ndarray, severity: int) -> np.ndarray:
         c = [0.08, 0.12, 0.18, 0.26, 0.38][severity - 1]
-        x = np.array(x) / 255.
-        return np.clip(x + np.random.normal(size=x.shape, scale=c), 0, 1) * 255
+        x = np.array(x, dtype=np.float32) / 255.
+        return np.clip(x + np.random.normal(size=x.shape, scale=c).astype(np.float32), 0, 1) * 255
     
     def shot_noise(self, x: np.ndarray, severity: int) -> np.ndarray:
         c = [60, 25, 12, 5, 3][severity - 1]
-        x = np.array(x) / 255.
-        return np.clip(np.random.poisson(x * c) / float(c), 0, 1) * 255
+        x = np.array(x, dtype=np.float32) / 255.
+        x = np.clip(x, 0, 1)  # Ensure x is in valid range for Poisson
+        return np.clip(np.random.poisson(x * c).astype(np.float32) / float(c), 0, 1) * 255
     
     def impulse_noise(self, x: np.ndarray, severity: int) -> np.ndarray:
         c = [0.03, 0.06, 0.09, 0.17, 0.27][severity - 1]
-        x = np.array(x) / 255.
+        x = np.array(x, dtype=np.float32) / 255.
+        x = np.clip(x, 0, 1)
         x_copy = x.copy()
         
         channels = x.shape[2] if len(x.shape) == 3 else 1
