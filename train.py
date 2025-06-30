@@ -60,11 +60,12 @@ def main():
     model = get_model(config)
     
     pda_transform = None
+    print(f"PDA enable flag: {config['pda']['enable']} (type: {type(config['pda']['enable'])})")
     if config['pda']['enable']:
         print("Setting up PDA...")
         
         diffusion_model = DiffusionModelWrapper(
-            model_path=None,
+            model_path=config['diffusion'].get('model_path'),
             model_type=config['diffusion']['model_type']
         )
         
@@ -85,6 +86,8 @@ def main():
             lambda2=config['pda']['lambda2'],
             device=device
         )
+    else:
+        print("PDA is disabled - training without augmentation")
     
     print("Setting up trainer...")
     trainer = Trainer(
