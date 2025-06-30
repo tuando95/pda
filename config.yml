@@ -1,0 +1,82 @@
+# Partial Diffusion Augmentation Configuration
+
+# Experiment settings
+experiment:
+  name: "pda_baseline"
+  seed: 42
+  device: "cuda"
+  num_workers: 4
+  mixed_precision: true
+
+# Data settings
+data:
+  dataset: "cifar10"  # Options: cifar10, cifar100, tiny-imagenet, imagenet32
+  data_dir: "./data"
+  batch_size: 128
+  val_split: 0.1
+  normalize: true
+  
+# Model settings
+model:
+  architecture: "resnet18"  # Options: resnet18, resnet50, vit_small, wide_resnet28_10
+  pretrained: false
+  num_classes: 10  # Will be overridden based on dataset
+
+# Training settings
+training:
+  epochs: 200
+  optimizer: "sgd"
+  learning_rate: 0.1
+  momentum: 0.9
+  weight_decay: 0.0001
+  lr_schedule: "cosine"
+  warmup_epochs: 5
+  
+# PDA settings
+pda:
+  enable: true
+  t_min: 50
+  t_max: 400
+  reverse_steps: 3  # K value
+  lambda1: 0.5  # Weight for noised image loss
+  lambda2: 0.5  # Weight for denoised image loss
+  prob: 0.5  # Probability of applying PDA to each sample
+  
+# Diffusion model settings
+diffusion:
+  model_path: "./models/adm_imagenet64.pth"
+  model_type: "adm"  # Options: adm, ddpm
+  noise_schedule: "cosine"
+  beta_start: 0.0001
+  beta_end: 0.02
+  num_timesteps: 1000
+  
+# Standard augmentation settings
+augmentation:
+  random_crop: true
+  random_horizontal_flip: true
+  randaugment: false
+  randaugment_n: 2
+  randaugment_m: 9
+  
+# Evaluation settings
+evaluation:
+  eval_frequency: 10  # Evaluate every N epochs
+  save_best_model: true
+  evaluate_robustness: true
+  corruption_types: ["gaussian_noise", "shot_noise", "impulse_noise", "defocus_blur", "motion_blur"]
+  corruption_severities: [1, 2, 3, 4, 5]
+  
+# Logging settings
+logging:
+  log_dir: "./logs"
+  tensorboard: true
+  wandb: false
+  wandb_project: "pda-experiments"
+  save_frequency: 50  # Save checkpoint every N epochs
+  
+# Computational efficiency settings
+efficiency:
+  track_flops: true
+  track_memory: true
+  profile_augmentation: true
