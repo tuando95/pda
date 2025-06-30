@@ -24,7 +24,7 @@ model:
 
 # Training settings
 training:
-  epochs: 200
+  epochs: 20
   optimizer: "sgd"
   learning_rate: 0.1
   momentum: 0.9
