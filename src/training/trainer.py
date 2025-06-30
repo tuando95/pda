@@ -215,10 +215,13 @@ class Trainer:
         if num_epochs is None:
             num_epochs = self.config['training']['epochs']
         
+        # Ensure num_epochs is an integer
+        num_epochs = int(num_epochs)
+        
         for epoch in range(self.start_epoch, num_epochs):
             train_metrics = self.train_epoch(epoch)
             
-            if epoch % self.config['evaluation']['eval_frequency'] == 0:
+            if epoch % int(self.config['evaluation']['eval_frequency']) == 0:
                 val_metrics = self.validate(epoch)
                 
                 is_best = val_metrics['acc1'] > self.best_acc
@@ -227,7 +230,7 @@ class Trainer:
                 
                 self._log_metrics(epoch, train_metrics, val_metrics)
                 
-                if epoch % self.config['logging']['save_frequency'] == 0 or is_best:
+                if epoch % int(self.config['logging']['save_frequency']) == 0 or is_best:
                     save_checkpoint({
                         'epoch': epoch + 1,
                         'state_dict': self.model.state_dict(),
