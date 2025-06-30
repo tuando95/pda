@@ -40,9 +40,11 @@ def main():
     
     for override in args.override:
         key, value = override.split('=')
+        print(f"Override: {key} = {value}")
         OmegaConf.update(config, key, value)
     
     config = OmegaConf.to_container(config, resolve=True)
+    print(f"Before type conversion - pda.enable: {config['pda']['enable']} (type: {type(config['pda']['enable'])})")
     
     # Convert config types to ensure proper data types
     config = convert_config_types(config)

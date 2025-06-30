@@ -68,10 +68,15 @@ def convert_config_types(config: Dict[str, Any]) -> Dict[str, Any]:
     
     def convert_value(value: Any, target_type: type) -> Any:
         """Convert a single value to target type."""
-        if isinstance(value, str):
-            if target_type == bool:
+        if target_type == bool:
+            if isinstance(value, bool):
+                return value
+            elif isinstance(value, str):
                 return value.lower() in ('true', '1', 'yes', 'on')
-            elif target_type == int:
+            elif isinstance(value, (int, float)):
+                return bool(value)
+        elif isinstance(value, str):
+            if target_type == int:
                 return int(value)
             elif target_type == float:
                 return float(value)
