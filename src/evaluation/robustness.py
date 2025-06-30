@@ -67,9 +67,9 @@ class CorruptionBenchmark:
                     for images, labels in tqdm(dataloader, desc=f'{corruption} (severity {severity})'):
                         corrupted_images = []
                         for img in images:
-                            img_np = img.permute(1, 2, 0).numpy()
+                            img_np = img.permute(1, 2, 0).cpu().numpy()
                             corrupted = self.corruption_functions[corruption](img_np, severity)
-                            corrupted_tensor = torch.from_numpy(corrupted).permute(2, 0, 1)
+                            corrupted_tensor = torch.from_numpy(corrupted).permute(2, 0, 1).float()
                             corrupted_images.append(corrupted_tensor)
                         
                         corrupted_batch = torch.stack(corrupted_images).to(device)
