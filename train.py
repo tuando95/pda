@@ -40,11 +40,22 @@ def main():
     
     for override in args.override:
         key, value = override.split('=')
-        # Convert string boolean values
+        # Convert string values to appropriate types
         if value.lower() in ('true', 'false'):
             value = value.lower() == 'true'
+        elif value.isdigit():
+            value = int(value)
+        elif '.' in value and value.replace('.', '').replace('-', '').isdigit():
+            try:
+                value = float(value)
+            except ValueError:
+                pass  # Keep as string
+        
         print(f"Override: {key} = {value} (type: {type(value)})")
         OmegaConf.update(config, key, value)
+    
+    # Debug: print config after overrides
+    print(f"After overrides - pda.enable: {config.pda.enable} (type: {type(config.pda.enable)})")
     
     config = OmegaConf.to_container(config, resolve=True)
     print(f"Before type conversion - pda.enable: {config['pda']['enable']} (type: {type(config['pda']['enable'])})")
