@@ -40,7 +40,10 @@ def main():
     
     for override in args.override:
         key, value = override.split('=')
-        print(f"Override: {key} = {value}")
+        # Convert string boolean values
+        if value.lower() in ('true', 'false'):
+            value = value.lower() == 'true'
+        print(f"Override: {key} = {value} (type: {type(value)})")
         OmegaConf.update(config, key, value)
     
     config = OmegaConf.to_container(config, resolve=True)
