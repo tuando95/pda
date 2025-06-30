@@ -253,6 +253,8 @@ class DiffusionModelWrapper(nn.Module):
             from .adm_model import create_adm_model
             self.model = create_adm_model()
             self.model.eval()
+            # Move model to the same device as input
+            self.model = self.model.to(x.device)
         
         with torch.no_grad():
             return self.model(x, t)
