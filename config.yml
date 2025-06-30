@@ -44,8 +44,8 @@ pda:
   
 # Diffusion model settings
 diffusion:
-  model_path: "./models/adm_imagenet64.pth"
-  model_type: "adm"  # Options: adm, ddpm
+  model_path: null  # Set to null to auto-load from HuggingFace
+  model_type: "auto"  # Options: adm, ddpm, auto (auto will use HuggingFace models)
   noise_schedule: "cosine"
   beta_start: 0.0001
   beta_end: 0.02

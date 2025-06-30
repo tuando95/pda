@@ -64,10 +64,18 @@ def main():
     if config['pda']['enable']:
         print("Setting up PDA...")
         
-        diffusion_model = DiffusionModelWrapper(
-            model_path=config['diffusion'].get('model_path'),
-            model_type=config['diffusion']['model_type']
-        )
+        # Don't pass model_path if it's null/None
+        model_path = config['diffusion'].get('model_path')
+        if model_path and model_path.lower() != 'null':
+            diffusion_model = DiffusionModelWrapper(
+                model_path=model_path,
+                model_type=config['diffusion']['model_type']
+            )
+        else:
+            diffusion_model = DiffusionModelWrapper(
+                model_path=None,
+                model_type=config['diffusion']['model_type']
+            )
         
         noise_scheduler = NoiseScheduler(
             num_timesteps=config['diffusion']['num_timesteps'],
