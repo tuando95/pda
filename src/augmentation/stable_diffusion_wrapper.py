@@ -24,21 +24,53 @@ class HuggingFaceDiffusionWrapper(nn.Module):
         
         # Load pre-trained pipeline
         print(f"Loading {model_name}...")
-        if "ddpm" in model_name:
-            self.pipeline = DDPMPipeline.from_pretrained(model_name)
-        elif "ddim" in model_name:
-            self.pipeline = DDIMPipeline.from_pretrained(model_name)
-        else:
-            # Try generic loading
-            self.pipeline = DDPMPipeline.from_pretrained(model_name)
+        try:
+            if "ddpm" in model_name:
+                self.pipeline = DDPMPipeline.from_pretrained(
+                    model_name,
+                    use_safetensors=False,  # Use older format
+                    torch_dtype=torch.float32
+                )
+            elif "ddim" in model_name:
+                self.pipeline = DDIMPipeline.from_pretrained(
+                    model_name,
+                    use_safetensors=False,
+                    torch_dtype=torch.float32
+                )
+            else:
+                # Try generic loading
+                self.pipeline = DDPMPipeline.from_pretrained(
+                    model_name,
+                    use_safetensors=False,
+                    torch_dtype=torch.float32
+                )
+        except Exception as e:
+            print(f"Error loading with DDPMPipeline: {e}")
+            # Try alternative loading
+            from diffusers import DiffusionPipeline
+            self.pipeline = DiffusionPipeline.from_pretrained(
+                model_name,
+                use_safetensors=False,
+                torch_dtype=torch.float32
+            )
         
         # Extract the UNet model
-        self.model = self.pipeline.unet
+        if hasattr(self.pipeline, 'unet'):
+            self.model = self.pipeline.unet
+        else:
+            # For some pipelines, the model might be named differently
+            self.model = self.pipeline.model
+            
         self.model.to(device)
         self.model.eval()
         
         # Get the noise scheduler
-        self.scheduler = self.pipeline.scheduler
+        if hasattr(self.pipeline, 'scheduler'):
+            self.scheduler = self.pipeline.scheduler
+        else:
+            # Create a default scheduler
+            from diffusers import DDPMScheduler
+            self.scheduler = DDPMScheduler(num_train_timesteps=1000)
         
         print(f"Loaded {model_name} successfully")
     

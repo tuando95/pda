@@ -13,6 +13,7 @@ from src.models.architectures import get_model
 from src.augmentation.diffusion_utils import NoiseScheduler, DiffusionModelWrapper
 from src.augmentation.pda import PDABatchTransform
 from src.training.trainer import Trainer
+from src.utils.config import convert_config_types
 
 
 def set_seed(seed: int):
@@ -42,6 +43,9 @@ def main():
         OmegaConf.update(config, key, value)
     
     config = OmegaConf.to_container(config, resolve=True)
+    
+    # Convert config types to ensure proper data types
+    config = convert_config_types(config)
     
     set_seed(config['experiment']['seed'])
     

@@ -99,7 +99,7 @@ class Trainer:
         if schedule_type == 'cosine':
             scheduler = optim.lr_scheduler.CosineAnnealingLR(
                 self.optimizer,
-                T_max=self.config['training']['epochs']
+                T_max=int(self.config['training']['epochs'])
             )
         elif schedule_type == 'step':
             scheduler = optim.lr_scheduler.StepLR(
