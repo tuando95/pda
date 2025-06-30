@@ -249,12 +249,19 @@ class DiffusionModelWrapper(nn.Module):
             Predicted noise [B, C, H, W]
         """
         if self.model is None:
-            # For testing/demo, use mock model
-            from .adm_model import create_adm_model
-            self.model = create_adm_model()
-            self.model.eval()
-            # Move model to the same device as input
-            self.model = self.model.to(x.device)
+            # Try to use pre-trained models
+            try:
+                from .stable_diffusion_wrapper import setup_diffusion_model
+                self.model = setup_diffusion_model('auto', device=x.device.type)
+                print("Loaded pre-trained diffusion model successfully!")
+            except Exception as e:
+                print(f"Could not load pre-trained model: {e}")
+                print("Falling back to untrained model...")
+                from .lightweight_ddpm import create_lightweight_ddpm
+                self.model = create_lightweight_ddpm(pretrained=False)
+                self.model.eval()
+                self.model = self.model.to(x.device)
         
         with torch.no_grad():
+            # Model directly predicts noise
             return self.model(x, t)
