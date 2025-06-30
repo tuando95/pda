@@ -254,7 +254,8 @@ personal_notes.md
 # Docker
 .dockerignore
 docker-compose.override.yml
-
+!src/data/
+!src/models/
 # Terraform
 *.tfstate
 *.tfstate.*
