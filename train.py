@@ -38,6 +38,7 @@ def main():
     
     config = OmegaConf.create(config)
     
+    print(f"Processing {len(args.override)} overrides: {args.override}")
     for override in args.override:
         key, value = override.split('=')
         # Convert string values to appropriate types
